@@ -63,6 +63,7 @@ def main():
         max_seq_len=config["data"]["seq_len"],
         lr=config["training"]["lr"],
         weight_decay=config["training"]["weight_decay"],
+        pll_max_utterances=config["training"]["pll_max_utterances"],  # <--- NEW
     )
 
     # Trainer
@@ -108,16 +109,19 @@ def setup_callbacks(config, run_dir):
     checkpoint_dir = os.path.join(run_dir, "checkpoints")
     os.makedirs(checkpoint_dir, exist_ok=True)
 
+    # NOTE: with multiple val dataloaders, Lightning appends `/dataloader_idx_0`
+    monitor_metric = "val_loss/dataloader_idx_0"
+
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
         filename="{epoch}-{val_loss:.4e}",
         save_top_k=config["training"]["save_top_k"],
-        monitor="val_loss",
+        monitor=monitor_metric,
         mode="min",
     )
 
     early_stopping_callback = EarlyStopping(
-        monitor="val_loss",
+        monitor=monitor_metric,
         patience=config["training"]["early_stopping_patience"],
         mode="min",
     )
