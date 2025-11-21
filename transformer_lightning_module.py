@@ -85,8 +85,13 @@ class MaskedTransformerModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         return self._step(batch, stage="train")
 
-    def validation_step(self, batch, batch_idx):
-        self._step(batch, stage="val")
+    def validation_step(self, batch, batch_idx, dataloader_idx=0):
+        # dataloader_idx 0 -> clean val, 1 -> gibberish val (if present)
+        if dataloader_idx == 0:
+            stage = "val"   # keep 'val_loss' for early stopping/checkpoints
+        else:
+            stage = "gib"   # logs 'gib_loss', 'gib_acc', 'gib_ppl'
+        self._step(batch, stage=stage)
 
     def test_step(self, batch, batch_idx):
         self._step(batch, stage="test")

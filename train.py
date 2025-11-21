@@ -46,6 +46,7 @@ def main():
         train_split=config["data"]["train_split"],
         val_split=config["data"]["val_split"],
         test_split=config["data"]["test_split"],
+        gibberish_base_dir=config["data"]["gibberish_base_dir"],  # <--- NEW
         pin_memory=True,
     )
 

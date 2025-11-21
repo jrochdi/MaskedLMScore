@@ -132,6 +132,7 @@ class UnitDataModule(pl.LightningDataModule):
         train_split="train",
         val_split="valid",
         test_split="test",
+        gibberish_base_dir=None,   # <--- NEW
         pin_memory=True,
     ):
         super().__init__()
@@ -144,11 +145,13 @@ class UnitDataModule(pl.LightningDataModule):
         self.train_split = train_split
         self.val_split = val_split
         self.test_split = test_split
+        self.gibberish_base_dir = gibberish_base_dir  # <--- NEW
         self.pin_memory = pin_memory
 
         self._train_dataset = None
         self._val_dataset = None
         self._test_dataset = None
+        self._val_gib_dataset = None  # <--- NEW
 
     def setup(self, stage=None):
         if stage in (None, "fit"):
@@ -166,6 +169,16 @@ class UnitDataModule(pl.LightningDataModule):
                 pad_value=self.pad_value,
                 random_crop=False,
             )
+
+            # Gibberish validation dataset (same split name as val_split)
+            if self.gibberish_base_dir is not None:
+                self._val_gib_dataset = UnitSequenceDataset(
+                    base_dir=self.gibberish_base_dir,
+                    split=self.val_split,
+                    seq_len=self.seq_len,
+                    pad_value=self.pad_value,
+                    random_crop=False,
+                )
 
         if stage in (None, "test"):
             self._test_dataset = UnitSequenceDataset(
@@ -187,7 +200,7 @@ class UnitDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
-        return DataLoader(
+        clean_loader = DataLoader(
             self._val_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -195,6 +208,20 @@ class UnitDataModule(pl.LightningDataModule):
             pin_memory=self.pin_memory,
             collate_fn=lambda b: unit_collate_fn(b, pad_value=self.pad_value),
         )
+
+        if self._val_gib_dataset is None:
+            return clean_loader
+
+        gib_loader = DataLoader(
+            self._val_gib_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+            pin_memory=self.pin_memory,
+            collate_fn=lambda b: unit_collate_fn(b, pad_value=self.pad_value),
+        )
+
+        return [clean_loader, gib_loader]
 
     def test_dataloader(self):
         return DataLoader(
