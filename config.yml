@@ -1,0 +1,52 @@
+seed: 1337
+matmul_precision: "high"   # or "medium", "highest"
+
+data:
+  # Root folders with HuBERT-unit .npy datasets
+  clean_base_dir: "/export/home/1rochdi/MaskedLMScore/LRS3_HUBERT_WORKSPACE/lrs3-hubert"         # e.g. LRS3 HuBERT tokens
+  gibberish_base_dir: "/export/home/1rochdi/MaskedLMScore/LRS3_HUBERT_WORKSPACE/lrs3-hubert" # not used yet in training
+
+  # Splits inside each base_dir
+  train_split: "pretrain"
+  val_split: "test"
+  test_split: "test"
+
+  # Sequence handling
+  seq_len: 512
+  random_crop: true
+
+model:
+  # K = # of k-means clusters used to create units (e.g. 100)
+  kmeans_clusters: 100
+
+  # We add PAD and MASK as extra vocabulary entries
+  vocab_size: 102         # K + 2
+  pad_id: 100             # K
+  mask_id: 101            # K + 1
+
+  d_model: 512
+  n_heads: 8
+  num_layers: 6
+  dim_feedforward: 2048
+  dropout: 0.1
+
+training:
+  runs_folder: "runs"
+  log_name: "mlm"
+  lightning_log_folder: "logs"
+  checkpoint_folder: "checkpoints"
+
+  batch_size: 64
+  num_workers: 4
+
+  lr: 1.0e-4
+  weight_decay: 0.01
+
+  max_epochs: 50
+  min_epochs: 5
+  save_top_k: 3
+  early_stopping_patience: 5
+  accumulate_grad_batches: 1
+
+  accelerator: "gpu"   # or "cpu"
+  devices: -1          # all GPUs

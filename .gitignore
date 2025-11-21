@@ -1,0 +1,16 @@
+# Virtual environment
+venv/
+.venv/
+.env
+
+# Data files
+LRS3_HUBERT_WORKSPACE
+data/
+data/*
+
+# Python cache
+__pycache__/
+*.pyc
+
+# runs
+runs
